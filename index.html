@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<video id="video" width="480" height="360" autoplay></video>
+<button id="big-button">Scan Code</button>
+
+<script>
+  const video = document.querySelector("#video");
+  const getbarcode = waitForCode({ formats: ["code_128"] });
+  const button = document.getElementById("big-button");
+
+  window.addEventListener("load", () => {
+    App();
+  });
+
+  function App() {
+    startVideoStream();
+
+    button.addEventListener("click", (e) => {
+      getbarcode.next().then((code) => {
+        // do something
+      });
+    });
+  }
+
+  function startVideoStream() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const constraints = {
+        video: { facingMode: "environment" },
+        audio: false,
+      };
+
+      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+        video.srcObject = stream;
+      });
+    }
+  }
+
+  async function* waitForCode(config) {
+    let handle;
+    let barcodeDetector;
+
+    try {
+      barcodeDetector = new BarcodeDetector(config);
+    } catch (e) {
+      barcodeDetector = null;
+    }
+
+    while (true) {
+      yield await new Promise((resolve, reject) => {
+        handle = setInterval(async () => {
+          const code = await detectCode(barcodeDetector);
+          if (code) {
+            cancel();
+            resolve(code);
+          } else if (code == null) {
+            cancel();
+            reject(null);
+          }
+        }, 1000);
+      });
+    }
+
+    function cancel() {
+      handle && clearTimeout(handle);
+    }
+
+    async function detectCode(barcodeDetector) {
+      if (!barcodeDetector) return;
+      const codes = await barcodeDetector.detect(video);
+      return codes.length > 0 && codes[0].rawValue;
+    }
+  }
+</script>
