@@ -5,9 +5,9 @@
 <button id="big-button">Scan Code</button>
 
 <script>
-  const video = document.querySelector("#video");
-  const getbarcode = waitForCode({ formats: ["code_128"] });
+  const video = document.getElementById("video");
   const button = document.getElementById("big-button");
+  const getbarcode = waitForCode({ formats: ["code_128"] });
 
   window.addEventListener("load", () => {
     App();
@@ -68,7 +68,7 @@
     async function detectCode(barcodeDetector) {
       if (!barcodeDetector) return;
       const codes = await barcodeDetector.detect(video);
-      return codes.length > 0 && codes[0].rawValue;
+      return codes.length > 0 && codes[0];
     }
   }
 </script>
